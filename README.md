@@ -6,3 +6,13 @@
 3. Add script to package file by `"start": "lite-server"` in script section
 4. Run server by typing in terminal `npm start`
 5. Compile TS from other terminal run `tsc -w`
+
+
+### Installing & Running WebPack 
+Problem: we have many modules it's mean we have many http requests.
+To solve it we could use WebPack to generate single file.
+1. Run command `npm install --save-dev webpack webpack-cli webpack-dev-server typescript ts-loader`
+2. Create `webpack.config.js` file and configure it 
+3. Remove all from dist folder
+4. Add script to package file like `"build": "webpack"` 
+5. Run command `npm run build`
