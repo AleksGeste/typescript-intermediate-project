@@ -16,3 +16,5 @@ To solve it we could use WebPack to generate single file.
 3. Remove all from dist folder
 4. Add script to package file like `"build": "webpack"` 
 5. Run command `npm run build`
+
+#### App is available online [here](http://207.154.228.44/). 
