@@ -1,12 +1,15 @@
 // Drag & Drop Interfaces
 interface Draggable {
     dragStartHandler(event: DragEvent): void;
+
     dragEndHandler(event: DragEvent): void;
 }
 
 interface DragTarget {
     dragOverHandler(event: DragEvent): void;
+
     dropHandler(event: DragEvent): void;
+
     dragLeaveHandler(event: DragEvent): void;
 }
 
@@ -68,6 +71,20 @@ class ProjectState extends State<Project> {
             ProjectStatus.Active
         );
         this.projects.push(newProject);
+        this.updateListeners();
+    }
+
+    // move to different list
+    moveProject(projectId: string, newStatus: ProjectStatus) {
+        const project = this.projects.find(pr => pr.id === projectId);
+        if (project && project.status !== newStatus) {
+            project.status = newStatus;
+            this.updateListeners();
+        }
+    }
+
+    // rerender
+    private updateListeners() {
         for (const listenerFn of this.listeners) {
             listenerFn(this.projects.slice());
         }
@@ -187,6 +204,7 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 
     // forcing any class from Component class to have those methods
     abstract configure(): void;
+
     abstract renderContent(): void;
 }
 
@@ -196,7 +214,7 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement>
     private project: Project;
 
     get persons() {
-        if (this.project.people === 1){
+        if (this.project.people === 1) {
             return '1 person';
         } else {
             return `${this.project.people} persons`;
@@ -213,7 +231,8 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement>
 
     @autobind
     dragStartHandler(event: DragEvent) {
-        console.log(event);
+        event.dataTransfer!.setData('text/plain', this.project.id);
+        event.dataTransfer!.effectAllowed = 'move';
     }
 
     dragEndHandler(_: DragEvent) {
@@ -237,7 +256,8 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement>
 
 // rendering the list of projects
 // ProjectList Class
-class ProjectList extends Component<HTMLDivElement, HTMLElement> {
+class ProjectList extends Component<HTMLDivElement, HTMLElement>
+    implements DragTarget {
     assignedProjects: Project[];
 
     // constructor with accessor union type
@@ -249,7 +269,33 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
         this.renderContent();
     }
 
+    @autobind
+    dragOverHandler(event: DragEvent) {
+        if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+            // to allow drag&drop
+            event.preventDefault();
+            const listEl = this.element.querySelector('ul')!;
+            listEl.classList.add('droppable');
+        }
+    }
+
+    @autobind
+    dropHandler(event: DragEvent) {
+        const prID = event.dataTransfer!.getData('text/plain');
+        projectState.moveProject(prID, this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished);
+    }
+
+    @autobind
+    dragLeaveHandler(_: DragEvent) {
+        const listEl = this.element.querySelector('ul')!;
+        listEl.classList.remove('droppable');
+    }
+
     configure() {
+        this.element.addEventListener('dragover', this.dragOverHandler);
+        this.element.addEventListener('dragleave', this.dragLeaveHandler);
+        this.element.addEventListener('drop', this.dropHandler);
+
         projectState.addListener((projects: Project[]) => {
             this.assignedProjects = projects.filter(prj => {
                 if (this.type === 'active') {
@@ -305,7 +351,8 @@ class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
         this.element.addEventListener('submit', this.submitHandler);
     }
 
-    renderContent() {}
+    renderContent() {
+    }
 
     // // Union Types
     // // method with Tuple type (title, description, number) or void because of validation error
@@ -371,4 +418,3 @@ class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
 const prjInput = new ProjectInput();
 const activePrjList = new ProjectList('active');
 const finishedPrjList = new ProjectList('finished');
-
