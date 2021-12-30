@@ -17,4 +17,4 @@ To solve it we could use WebPack to generate single file.
 4. Add script to package file like `"build": "webpack"` 
 5. Run command `npm run build`
 
-#### App is available online [here](http://207.154.228.44/). 
+#### App is available online [here](http://138.68.103.93/ts/). 
